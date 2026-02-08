@@ -1,25 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { initializeDatabase } = require('./database');
+const { supabase } = require('./database');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-let db;
-
-// Initialize database before starting server
-initializeDatabase().then(database => {
-    db = database;
-    app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
-    });
-}).catch(err => {
-    console.error('Failed to initialize database:', err);
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 // --- API Endpoints ---
@@ -27,8 +19,9 @@ initializeDatabase().then(database => {
 // Get all students
 app.get('/api/students', async (req, res) => {
     try {
-        const students = await db.all('SELECT * FROM students');
-        res.json(students);
+        const { data, error } = await supabase.from('students').select('*');
+        if (error) throw error;
+        res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -38,11 +31,13 @@ app.get('/api/students', async (req, res) => {
 app.post('/api/students', async (req, res) => {
     const { first_name, last_name, email, strand } = req.body;
     try {
-        const result = await db.run(
-            'INSERT INTO students (first_name, last_name, email, strand) VALUES (?, ?, ?, ?)',
-            [first_name, last_name, email, strand]
-        );
-        res.status(201).json({ id: result.lastID, message: 'Student registered successfully' });
+        const { data, error } = await supabase
+            .from('students')
+            .insert([{ first_name, last_name, email, strand }])
+            .select();
+
+        if (error) throw error;
+        res.status(201).json({ id: data[0].id, message: 'Student registered successfully' });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
@@ -51,8 +46,9 @@ app.post('/api/students', async (req, res) => {
 // Get all courses
 app.get('/api/courses', async (req, res) => {
     try {
-        const courses = await db.all('SELECT * FROM courses');
-        res.json(courses);
+        const { data, error } = await supabase.from('courses').select('*');
+        if (error) throw error;
+        res.json(data);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -62,11 +58,13 @@ app.get('/api/courses', async (req, res) => {
 app.post('/api/enrollments', async (req, res) => {
     const { student_id, course_id } = req.body;
     try {
-        const result = await db.run(
-            'INSERT INTO enrollments (student_id, course_id) VALUES (?, ?)',
-            [student_id, course_id]
-        );
-        res.status(201).json({ id: result.lastID, message: 'Enrolled successfully' });
+        const { data, error } = await supabase
+            .from('enrollments')
+            .insert([{ student_id: parseInt(student_id), course_id: parseInt(course_id) }])
+            .select();
+
+        if (error) throw error;
+        res.status(201).json({ id: data[0].id, message: 'Enrolled successfully' });
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
@@ -75,20 +73,28 @@ app.post('/api/enrollments', async (req, res) => {
 // Get all enrollments with details
 app.get('/api/enrollments', async (req, res) => {
     try {
-        const query = `
-            SELECT 
-                e.id, 
-                s.first_name, 
-                s.last_name, 
-                c.name as course_name, 
-                e.enrollment_date 
-            FROM enrollments e
-            JOIN students s ON e.student_id = s.id
-            JOIN courses c ON e.course_id = c.id
-            ORDER BY e.enrollment_date DESC
-        `;
-        const enrollments = await db.all(query);
-        res.json(enrollments);
+        const { data, error } = await supabase
+            .from('enrollments')
+            .select(`
+                id,
+                enrollment_date,
+                students (first_name, last_name),
+                courses (name)
+            `)
+            .order('enrollment_date', { ascending: false });
+
+        if (error) throw error;
+
+        // Map the result to match the frontend expectations
+        const formattedData = data.map(e => ({
+            id: e.id,
+            first_name: e.students.first_name,
+            last_name: e.students.last_name,
+            course_name: e.courses.name,
+            enrollment_date: e.enrollment_date
+        }));
+
+        res.json(formattedData);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

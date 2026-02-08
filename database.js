@@ -1,27 +1,13 @@
-const sqlite3 = require('sqlite3');
-const { open } = require('sqlite');
-const fs = require('fs');
-const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
-async function initializeDatabase() {
-    const db = await open({
-        filename: path.join(__dirname, 'enrollment.db'),
-        driver: sqlite3.Database
-    });
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
 
-    console.log('Connected to the SQLite database.');
-
-    const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-    
-    // Split the schema into individual statements
-    const statements = schema.split(';').filter(stmt => stmt.trim() !== '');
-    
-    for (const statement of statements) {
-        await db.run(statement);
-    }
-
-    console.log('Database schema initialized.');
-    return db;
+if (!supabaseUrl || !supabaseKey) {
+    console.warn('Supabase URL or Key is missing from environment variables.');
 }
 
-module.exports = { initializeDatabase };
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+module.exports = { supabase };
