@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHS Enrollment System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SHS Enrollment System</h1>
+            <p>Manage student registrations and course enrollments easily.</p>
+        </header>
+
+        <div class="grid">
+            <!-- Student Registration -->
+            <section class="card">
+                <h2>Register Student</h2>
+                <form id="studentForm">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="strand">Strand</label>
+                        <select id="strand" required>
+                            <option value="">Select Strand</option>
+                            <option value="STEM">STEM</option>
+                            <option value="ABM">ABM</option>
+                            <option value="HUMSS">HUMSS</option>
+                            <option value="GAS">GAS</option>
+                            <option value="ICT">ICT</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary">Register Student</button>
+                </form>
+            </section>
+
+            <!-- Enroll in Course -->
+            <section class="card">
+                <h2>Enroll in Course</h2>
+                <form id="enrollmentForm">
+                    <div class="form-group">
+                        <label for="studentSelect">Select Student</label>
+                        <select id="studentSelect" required>
+                            <option value="">Loading students...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="courseSelect">Select Course</label>
+                        <select id="courseSelect" required>
+                            <option value="">Loading courses...</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-secondary">Enroll Now</button>
+                </form>
+            </section>
+        </div>
+
+        <!-- Enrollment List -->
+        <section class="card full-width">
+            <h2>Current Enrollments</h2>
+            <div class="table-container">
+                <table id="enrollmentTable">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Course</th>
+                            <th>Enrollment Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Rows will be added here via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
